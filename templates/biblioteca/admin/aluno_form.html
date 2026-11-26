@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar{% else %}Cadastrar{% endif %} Aluno - Biblioteca da Escola do Campo Presidente Costa e Silva
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                <i class="bi bi-person-plus"></i>
+                {% if form.instance.pk %}Editar Aluno{% else %}Cadastrar Novo Aluno{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if form.instance.pk %}
+                    Atualize as informações de "{{ form.instance.nome }}"
+                {% else %}
+                    Preencha os dados do aluno
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'aluno_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar à Lista
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Dados do Aluno
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.nome.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> Nome *
+                            </label>
+                            {{ form.nome }}
+                            {% if form.nome.errors %}
+                                <div class="text-danger small">{{ form.nome.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.idade.id_for_label }}" class="form-label">
+                                    <i class="bi bi-calendar"></i> Idade *
+                                </label>
+                                {{ form.idade }}
+                                {% if form.idade.errors %}
+                                    <div class="text-danger small">{{ form.idade.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.genero.id_for_label }}" class="form-label">
+                                    <i class="bi bi-gender-ambiguous"></i> Gênero *
+                                </label>
+                                {{ form.genero }}
+                                {% if form.genero.errors %}
+                                    <div class="text-danger small">{{ form.genero.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.serie.id_for_label }}" class="form-label">
+                                <i class="bi bi-mortarboard"></i> Série *
+                            </label>
+                            {{ form.serie }}
+                            {% if form.serie.errors %}
+                                <div class="text-danger small">{{ form.serie.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Botões de Ação -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'aluno_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i>
+                                {% if form.instance.pk %}Atualizar{% else %}Cadastrar{% endif %} Aluno
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

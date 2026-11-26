@@ -1,0 +1,8 @@
+{% extends "admin/change_list.html" %}
+
+{% block result_list %}
+    {{ block.super }}
+    <div style="margin: 15px 0; padding: 10px 15px; background: var(--darkened-bg, #f8f8f8); border: 1px solid var(--hairline-color, #ddd); border-radius: 4px; font-weight: bold;">
+        Totais no acervo: {{ total_disponiveis_geral }} exemplares disponíveis de {{ total_exemplares_geral }} cadastrados
+    </div>
+{% endblock %}

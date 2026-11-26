@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ aluno.nome }} - Detalhes do Aluno{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>
+                        <i class="bi bi-person-circle"></i>
+                        {{ aluno.nome }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Painel</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'aluno_list' %}">Alunos</a></li>
+                            <li class="breadcrumb-item active">{{ aluno.nome }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{% url 'aluno_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                    <a href="{% url 'aluno_edit' aluno.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    {% if aluno.esta_suspenso %}
+                        <button type="button" class="btn btn-success" onclick="reativarAluno({{ aluno.id }})">
+                            <i class="bi bi-check"></i> Reativar Aluno
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-warning" onclick="suspenderAluno({{ aluno.id }})">
+                            <i class="bi bi-pause"></i> Suspender Aluno
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informações Principais -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person"></i> Informações do Aluno
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Nome Completo:</strong></td>
+                                            <td>{{ aluno.nome }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Idade:</strong></td>
+                                            <td>{{ aluno.idade }} anos</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Gênero:</strong></td>
+                                            <td>{{ aluno.get_genero_display }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Série:</strong></td>
+                                            <td>{{ aluno.serie }}</td>
+                                        </tr>
+                                        {% if aluno.data_suspensao %}
+                                        <tr>
+                                            <td><strong>Suspenso até:</strong></td>
+                                            <td>
+                                                <span class="badge bg-warning">{{ aluno.data_suspensao|date:"d/m/Y" }}</span>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <!-- Status -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-shield-check"></i> Status
+                            </h6>
+                        </div>
+                        <div class="card-body text-center">
+                            {% if aluno.esta_suspenso %}
+                                <span class="badge bg-warning fs-6">Suspenso</span>
+                            {% else %}
+                                <span class="badge bg-success fs-6">Ativo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-graph-up"></i> Estatísticas
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h4 class="text-primary mb-0">{{ total_emprestimos }}</h4>
+                                        <small class="text-muted">Total</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <h4 class="text-warning mb-0">{{ emprestimos_ativos }}</h4>
+                                        <small class="text-muted">Ativos</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <h4 class="text-danger mb-0">{{ emprestimos_atrasados }}</h4>
+                                    <small class="text-muted">Atrasados</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Histórico de Empréstimos -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Histórico de Empréstimos
+                        <span class="badge bg-secondary ms-2">{{ emprestimos_recentes|length }} registros</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if emprestimos_recentes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Livro</th>
+                                        <th>Autor</th>
+                                        <th>Data Empréstimo</th>
+                                        <th>Previsão Devolução</th>
+                                        <th>Data Devolução</th>
+                                        <th>Status</th>
+                                        <th>Dias</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emprestimo in emprestimos_recentes %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ emprestimo.exemplar.titulo.titulo_da_obra|truncatechars:40 }}</strong>
+                                            <br>
+                                            <small class="text-muted">Exemplar: {{ emprestimo.exemplar.codigo_exemplar }}</small>
+                                        </td>
+                                        <td>
+                                            <small>{{ emprestimo.exemplar.titulo.autor|truncatechars:30 }}</small>
+                                        </td>
+                                        <td>
+                                            {{ emprestimo.data_emprestimo|date:"d/m/Y" }}
+                                        </td>
+                                        <td>
+                                            {{ emprestimo.previsao_devolucao|date:"d/m/Y" }}
+                                        </td>
+                                        <td>
+                                            {% if emprestimo.data_devolucao %}
+                                                {{ emprestimo.data_devolucao|date:"d/m/Y" }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if emprestimo.data_devolucao %}
+                                                <span class="badge bg-success">Devolvido</span>
+                                            {% elif emprestimo.esta_atrasado %}
+                                                <span class="badge bg-danger">Atrasado</span>
+                                            {% else %}
+                                                <span class="badge bg-primary">Ativo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if emprestimo.data_devolucao %}
+                                                <small class="text-muted">
+                                                    {{ emprestimo.data_emprestimo|timesince:emprestimo.data_devolucao }}
+                                                </small>
+                                            {% else %}
+                                                <small class="text-warning">
+                                                    {{ emprestimo.data_emprestimo|timesince }}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">Nenhum empréstimo encontrado</h5>
+                            <p class="text-muted">Este aluno ainda não realizou empréstimos.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-borderless td {
+    border: none;
+    padding: 0.5rem 0;
+}
+</style>
+
+<script>
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+function suspenderAluno(alunoId) {
+    if (confirm('Tem certeza que deseja suspender este aluno?')) {
+        fetch(`/painel/alunos/${alunoId}/suspender/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao suspender aluno: ' + (data.error || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => alert('Erro ao suspender aluno'));
+    }
+}
+
+function reativarAluno(alunoId) {
+    if (confirm('Tem certeza que deseja reativar este aluno?')) {
+        fetch(`/painel/alunos/${alunoId}/reativar/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao reativar aluno: ' + (data.error || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => alert('Erro ao reativar aluno'));
+    }
+}
+</script>
+{% endblock %}

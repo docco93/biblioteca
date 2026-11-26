@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestão de Alunos - Administração{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-people"></i> Gestão de Alunos</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Painel</a></li>
+                            <li class="breadcrumb-item active">Alunos</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="{% url 'aluno_create' %}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Cadastrar Aluno
+                </a>
+            </div>
+
+            <!-- Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body text-center">
+                            <div class="stats-number">{{ total_alunos }}</div>
+                            <h6 class="card-title mb-0">Total de Alunos</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body text-center">
+                            <div class="stats-number">{{ total_ativos }}</div>
+                            <h6 class="card-title mb-0">Ativos</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card stats-card h-100">
+                        <div class="card-body text-center">
+                            <div class="stats-number">{{ total_suspensos }}</div>
+                            <h6 class="card-title mb-0">Suspensos</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="busca" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="busca" name="busca"
+                                value="{{ busca|default:'' }}" placeholder="Nome ou série">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="genero" class="form-label">Gênero</label>
+                            <select class="form-select" id="genero" name="genero">
+                                <option value="">Todos</option>
+                                {% for valor, rotulo in genero_choices %}
+                                    <option value="{{ valor }}" {% if genero == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="serie" class="form-label">Série</label>
+                            <select class="form-select" id="serie" name="serie">
+                                <option value="">Todas</option>
+                                {% for valor, rotulo in serie_choices %}
+                                    <option value="{{ valor }}" {% if serie == valor %}selected{% endif %}>{{ rotulo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Todos</option>
+                                <option value="ativo" {% if status == 'ativo' %}selected{% endif %}>Ativos</option>
+                                <option value="suspenso" {% if status == 'suspenso' %}selected{% endif %}>Suspensos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="ordem" class="form-label">Ordenar por</label>
+                            <select class="form-select" id="ordem" name="ordem">
+                                <option value="nome" {% if ordem == 'nome' %}selected{% endif %}>Nome</option>
+                                <option value="idade" {% if ordem == 'idade' %}selected{% endif %}>Idade</option>
+                                <option value="genero" {% if ordem == 'genero' %}selected{% endif %}>Gênero</option>
+                                <option value="serie" {% if ordem == 'serie' %}selected{% endif %}>Série</option>
+                                <option value="data" {% if ordem == 'data' %}selected{% endif %}>Data de Cadastro</option>
+                                <option value="emprestimos" {% if ordem == 'emprestimos' %}selected{% endif %}>Empréstimos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    {% if busca or status or genero or serie %}
+                    <div class="mt-2">
+                        <a href="{% url 'aluno_list' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle"></i> Limpar Filtros
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Lista de Alunos -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list"></i> Lista de Alunos
+                        <span class="badge bg-secondary ms-2">{{ page_obj.paginator.count }} alunos</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Aluno</th>
+                                        <th>Idade</th>
+                                        <th>Gênero</th>
+                                        <th>Série</th>
+                                        <th>Status</th>
+                                        <th>Empréstimos</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for aluno in page_obj %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-2">
+                                                    {{ aluno.nome|first }}
+                                                </div>
+                                                <strong>{{ aluno.nome }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>{{ aluno.idade }} anos</td>
+                                        <td>{{ aluno.get_genero_display }}</td>
+                                        <td>{{ aluno.serie }}</td>
+                                        <td>
+                                            {% if aluno.esta_suspenso %}
+                                                <span class="badge bg-warning">Suspenso</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Ativo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ aluno.emprestimos_ativos_count }}</span> /
+                                            <span class="badge bg-secondary">{{ aluno.total_emprestimos }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'aluno_detail' aluno.id %}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'aluno_edit' aluno.id %}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                {% if aluno.esta_suspenso %}
+                                                    <button type="button" class="btn btn-outline-success btn-sm"
+                                                            onclick="reativarAluno('{{ aluno.id }}')">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-outline-warning btn-sm"
+                                                            onclick="suspenderAluno('{{ aluno.id }}')">
+                                                        <i class="bi bi-pause"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginação -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Navegação de páginas">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if genero %}&genero={{ genero }}{% endif %}{% if serie %}&serie={{ serie }}{% endif %}{% if ordem %}&ordem={{ ordem }}{% endif %}">Primeira</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if genero %}&genero={{ genero }}{% endif %}{% if serie %}&serie={{ serie }}{% endif %}{% if ordem %}&ordem={{ ordem }}{% endif %}">Anterior</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if genero %}&genero={{ genero }}{% endif %}{% if serie %}&serie={{ serie }}{% endif %}{% if ordem %}&ordem={{ ordem }}{% endif %}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if genero %}&genero={{ genero }}{% endif %}{% if serie %}&serie={{ serie }}{% endif %}{% if ordem %}&ordem={{ ordem }}{% endif %}">Próxima</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if busca %}&busca={{ busca }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if genero %}&genero={{ genero }}{% endif %}{% if serie %}&serie={{ serie }}{% endif %}{% if ordem %}&ordem={{ ordem }}{% endif %}">Última</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="text-muted mt-3">Nenhum aluno encontrado</h4>
+                            <p class="text-muted">Tente ajustar os filtros de busca ou cadastre um novo aluno.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #3498db, #2ecc71);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.stats-card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+async function makePostRequest(url) {
+    let csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (!csrftoken) {
+        csrftoken = getCookie('csrftoken');
+    }
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken || '',
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    });
+
+    if (!response.ok) {
+        const errMsg = `HTTP ${response.status}`;
+        try {
+            const errData = await response.json();
+            throw new Error(`${errMsg}: ${errData.error || 'Erro desconhecido'}`);
+        } catch (e) {
+            throw new Error(errMsg);
+        }
+    }
+
+    return await response.json();
+}
+
+function suspenderAluno(alunoId) {
+    if (confirm('Tem certeza que deseja suspender este aluno?')) {
+        makePostRequest(`/painel/alunos/${alunoId}/suspender/`)
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erro ao suspender aluno: ' + (data.error || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => alert('Erro ao suspender aluno: ' + error.message));
+    }
+}
+
+function reativarAluno(alunoId) {
+    if (confirm('Tem certeza que deseja reativar este aluno?')) {
+        makePostRequest(`/painel/alunos/${alunoId}/reativar/`)
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erro ao reativar aluno: ' + (data.error || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => alert('Erro ao reativar aluno: ' + error.message));
+    }
+}
+</script>
+{% endblock %}

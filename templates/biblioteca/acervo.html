@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Acervo - Biblioteca da Escola do Campo Presidente Costa e Silva{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>
+                <i class="bi bi-search"></i> Consultar Acervo
+            </h2>
+            <p class="text-muted">Explore nossa coleção de livros e encontre o que você procura.</p>
+        </div>
+    </div>
+
+    <!-- Formulário de Busca -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel"></i> Filtros de Busca
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.termo_busca.id_for_label }}" class="form-label">
+                                <i class="bi bi-search"></i> Buscar por
+                            </label>
+                            {{ form.termo_busca }}
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label for="{{ form.tipo_busca.id_for_label }}" class="form-label">
+                                <i class="bi bi-filter"></i> Tipo
+                            </label>
+                            {{ form.tipo_busca }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="{{ form.editora.id_for_label }}" class="form-label">
+                                <i class="bi bi-building"></i> Editora
+                            </label>
+                            {{ form.editora }}
+                        </div>
+                        
+                        <div class="col-md-1">
+                            <label for="{{ form.ano_inicio.id_for_label }}" class="form-label">
+                                <i class="bi bi-calendar"></i> De
+                            </label>
+                            {{ form.ano_inicio }}
+                        </div>
+                        
+                        <div class="col-md-1">
+                            <label for="{{ form.ano_fim.id_for_label }}" class="form-label">
+                                Até
+                            </label>
+                            {{ form.ano_fim }}
+                        </div>
+                        
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list"></i> Resultados da Busca
+                    </h5>
+                    <span class="badge bg-primary">{{ total_resultados }} encontrado{{ total_resultados|pluralize }}</span>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="row">
+                            {% for titulo in page_obj %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ titulo.titulo_da_obra }}</h6>
+                                        <p class="card-text">
+                                            <strong>Autor:</strong> {{ titulo.autor }}<br>
+                                            <strong>Editora:</strong> {{ titulo.editora }}<br>
+                                            <strong>Ano:</strong> {{ titulo.ano_publicacao }}
+                                        </p>
+                                        
+                                        <!-- Status de Disponibilidade -->
+                                        <div class="mb-3">
+                                            {% if titulo.exemplares_disponiveis > 0 %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    {{ titulo.exemplares_disponiveis }} disponível{{ titulo.exemplares_disponiveis|pluralize:"es" }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle"></i>
+                                                    Indisponível
+                                                </span>
+                                            {% endif %}
+                                            
+                                            <small class="text-muted d-block mt-1">
+                                                Total: {{ titulo.total_exemplares }} exemplar{{ titulo.total_exemplares|pluralize:"es" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card-footer">
+                                        {% if titulo.exemplares_disponiveis > 0 %}
+                                            {% if user.is_authenticated and user.is_administrador %}
+                                                <a href="{% url 'emprestimo_create' %}" class="btn btn-success btn-sm w-100">
+                                                    <i class="bi bi-plus-circle"></i> Registrar Empréstimo
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-outline-success btn-sm w-100" disabled>
+                                                    <i class="bi bi-check-circle"></i> Disponível na biblioteca
+                                                </button>
+                                            {% endif %}
+                                        {% else %}
+                                            <button class="btn btn-secondary btn-sm w-100" disabled>
+                                                <i class="bi bi-x-circle"></i> Indisponível
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Paginação -->
+                        {% if page_obj.has_other_pages %}
+                        <nav aria-label="Navegação de páginas">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if request.GET.termo_busca %}&termo_busca={{ request.GET.termo_busca }}{% endif %}{% if request.GET.tipo_busca %}&tipo_busca={{ request.GET.tipo_busca }}{% endif %}{% if request.GET.editora %}&editora={{ request.GET.editora }}{% endif %}{% if request.GET.ano_inicio %}&ano_inicio={{ request.GET.ano_inicio }}{% endif %}{% if request.GET.ano_fim %}&ano_fim={{ request.GET.ano_fim }}{% endif %}">
+                                            <i class="bi bi-chevron-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.termo_busca %}&termo_busca={{ request.GET.termo_busca }}{% endif %}{% if request.GET.tipo_busca %}&tipo_busca={{ request.GET.tipo_busca }}{% endif %}{% if request.GET.editora %}&editora={{ request.GET.editora }}{% endif %}{% if request.GET.ano_inicio %}&ano_inicio={{ request.GET.ano_inicio }}{% endif %}{% if request.GET.ano_fim %}&ano_fim={{ request.GET.ano_fim }}{% endif %}">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.termo_busca %}&termo_busca={{ request.GET.termo_busca }}{% endif %}{% if request.GET.tipo_busca %}&tipo_busca={{ request.GET.tipo_busca }}{% endif %}{% if request.GET.editora %}&editora={{ request.GET.editora }}{% endif %}{% if request.GET.ano_inicio %}&ano_inicio={{ request.GET.ano_inicio }}{% endif %}{% if request.GET.ano_fim %}&ano_fim={{ request.GET.ano_fim }}{% endif %}">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.termo_busca %}&termo_busca={{ request.GET.termo_busca }}{% endif %}{% if request.GET.tipo_busca %}&tipo_busca={{ request.GET.tipo_busca }}{% endif %}{% if request.GET.editora %}&editora={{ request.GET.editora }}{% endif %}{% if request.GET.ano_inicio %}&ano_inicio={{ request.GET.ano_inicio }}{% endif %}{% if request.GET.ano_fim %}&ano_fim={{ request.GET.ano_fim }}{% endif %}">
+                                            <i class="bi bi-chevron-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="text-muted mt-3">Nenhum resultado encontrado</h4>
+                            <p class="text-muted">
+                                Tente ajustar os filtros de busca ou usar termos diferentes.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

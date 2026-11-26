@@ -1,0 +1,35 @@
+# Ambiente virtual
+venv/
+env/
+.venv/
+
+# Variáveis de ambiente (contém segredos - nunca commitar)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+
+# Banco de dados local
+db.sqlite3
+db.sqlite3-journal
+
+# Arquivos de mídia enviados/gerados (QR Codes, uploads)
+media/
+
+# Arquivos estáticos coletados (gerados por collectstatic)
+staticfiles/
+
+# Editores/IDEs
+.vscode/
+.idea/
+*.swp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
